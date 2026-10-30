@@ -77,34 +77,9 @@ final class MusicQueuePlayer {
         if let activity {
             endLiveActivity(activity)
         }
+        
         try launchLiveActivity(duration: 0.1, currentTime: 0.0)
         
-    }
-
-    /// Load multiple audio files included in the app bundle.
-    func playBundleTracks(
-        _ tracks: [(name: String, fileExtension: String)],
-        bundle: Bundle = .main
-    ) throws {
-        let urls = try tracks.map { track -> URL in
-            guard let url = bundle.url(
-                forResource: track.name,
-                withExtension: track.fileExtension
-            ) else {
-                throw MusicQueueError.resourceNotFound(
-                    "\(track.name).\(track.fileExtension)"
-                )
-            }
-
-            return url
-        }
-
-        try play(urls: urls)
-    }
-
-    /// Append a track to the end of the queue.
-    func enqueue(_ url: URL) {
-        player.insert(AVPlayerItem(url: url), after: nil)
     }
 
     func pause() {
@@ -218,5 +193,17 @@ final class MusicQueuePlayer {
         self.timeObserver = nil
         guard let activity else {return}
         endLiveActivity(activity)
+    }
+    
+    enum PlayerError: LocalizedError {
+        case permision
+        
+        
+        var errorDescription: String? {
+            switch self {
+            case .permision:
+                "Permision error on playing"
+            }
+        }
     }
 }

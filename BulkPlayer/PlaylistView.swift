@@ -44,7 +44,7 @@ struct PlaylistView: View {
 }
 
 #Preview {
-    let song = SongTrack(url: URL(string: "file///this-dvice/moc.mp3")!)
+    let song = SongTrack(path: "this-dvice/moc.mp3")
     return PlaylistView(songs: [song])
         .environment(MusicQueuePlayer.shared)
     

@@ -1,14 +1,15 @@
 import SwiftUI
-import Playgrounds
 import AVFoundation
 import SwiftData
+import Playgrounds
 
 struct ContentView: View {
     
-    @State private var columns = false
+    @AppStorage("columns") private var columns = false
     @State private var fileImporterPresent = false
     @State private var showPlayList = false
     @State private var error: Error?
+    @State private var importing = false
     @Environment(MusicQueuePlayer.self) private var playerManager
     
     
@@ -70,28 +71,32 @@ struct ContentView: View {
                         Button {
                             fileImporterPresent.toggle()
                         } label: {
-                            Label("Import", systemImage: "plus")
+                            if importing {
+                                ProgressView()
+                            } else {
+                                Label("Import", systemImage: "plus")
+                            }
                         }
                         .buttonStyle(.borderedProminent)
                     }
                 }
             }
         }
-        .fileImporter(isPresented: $fileImporterPresent, allowedContentTypes: [.mp3], allowsMultipleSelection: true) { result in
+        .fileImporter(isPresented: $fileImporterPresent, allowedContentTypes: [.audio], allowsMultipleSelection: true) { result in
             switch result {
             case .success(let urls):
-                do {
-                    try handleFile(urls: urls)
-                } catch {
-                    self.error = error
+                Task {
+                    do {
+                        try await handleFile(urls: urls)
+                    } catch {
+                        self.error = error
+                    }
                 }
             case .failure(let error):
                 self.error = error
             }
         }
-        .alert(error: $error) {
-            Button("Dismiss", role: .close){}
-        }
+        .alert(error: $error) {}
         .sheet(isPresented: $showPlayList) {
             PlaylistView(songs: songs.filter {$0.addedToPlaylist})
                 .presentationDetents([.medium, .large])
@@ -99,36 +104,31 @@ struct ContentView: View {
         .environment(playerManager)
     }
     
-    func handleFile(urls: [URL]) throws {
+    // Mark: file handler
+    private func handleFile(urls: [URL]) async throws {
+        importing = true
         for url in urls {
             // 1. Start accessing the security-scoped resource
-            guard url.startAccessingSecurityScopedResource() else {
-                throw FileImporterError.permision
-            }
+            let permission = url.startAccessingSecurityScopedResource()
             
             defer {
                 // 2. Stop accessing when finished
                 url.stopAccessingSecurityScopedResource()
+                importing = false
             }
             
-            let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            let destinationURL = documentsDirectory.appendingPathComponent(url.lastPathComponent)
-            
-            do {
-                // Copy file to your app's Documents directory
-                try FileManager.default.copyItem(at: url, to: destinationURL)
-                let song = SongTrack(url: destinationURL)
-                context.insert(song)
-                try context.save()
-                
-                // Update state to enable playback
-            } catch {
-                throw error
-            }
+            let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            guard permission else { throw FileImporterError.permision }
+           let destinationURL = documentsDirectory.appendingPathComponent(url.lastPathComponent)
+            // Copy file to your app's Documents directory
+            try FileManager.default.copyItem(at: url, to: destinationURL)
+            let song = SongTrack(path: destinationURL.lastPathComponent)
+            context.insert(song)
         }
+        try context.save()
     }
     
-    func delete(_ song: SongTrack) {
+    private func delete(_ song: SongTrack) {
         do {
             try FileManager.default.removeItem(at: song.url)
             withAnimation {
@@ -140,10 +140,11 @@ struct ContentView: View {
         }
     }
     
-    func menuPrimaryAction() {
+    private func menuPrimaryAction() {
         do {
             if playerManager.isPlaying {
                 playerManager.stop()
+                NotificationCenter.default.post(name: .stopAll, object: nil)
             } else {
                 if (songs.filter {$0.addedToPlaylist}).isEmpty {
                     try playerManager.play(urls: songs.map {$0.url})
@@ -156,7 +157,7 @@ struct ContentView: View {
         }
     }
     
-    func songsView() -> some View {
+    private func songsView() -> some View {
         VStack {
             if playerManager.isPlaying {
                 VStack(alignment: .leading) {
@@ -172,8 +173,8 @@ struct ContentView: View {
             ScrollView {
                 LazyVGrid(columns: items, spacing: 20) {
                     ForEach(songs, id: \.self) { song in
-                        TrackView(song: song)
-                            .background(scheme == .light ? LinearGradient(colors: [.white, .gray.opacity(0.2)], startPoint: .top, endPoint: .bottomTrailing) : LinearGradient(colors: [.black, .gray.opacity(0.2)], startPoint: .top, endPoint: .bottomTrailing) ,in: RoundedRectangle(cornerRadius: 10))
+                        TrackView(song: song, compactMode: columns)
+                            .background(scheme == .light ? LinearGradient(colors: [.white, .gray.opacity(0.2)], startPoint: .top, endPoint: .bottomTrailing) : LinearGradient(colors: [.gray.opacity(0.2), .black.opacity(0.5)], startPoint: .topLeading, endPoint: .bottomTrailing) ,in: RoundedRectangle(cornerRadius: 12))
                             .environment(playerManager)
                             .swipeActions {
                                 Button(role: .destructive) {
@@ -194,14 +195,19 @@ struct ContentView: View {
         }
         .overlay {
             if songs.isEmpty {
-                emptySongsView()
+                emptySongsView(isLoading: importing)
             }
         }
     }
     
-    func emptySongsView() -> some View {
+    private func emptySongsView(isLoading: Bool = false) -> some View {
         ContentUnavailableView {
-            Label("No Song Yet", systemImage: "music.note.slash")
+            switch isLoading {
+            case true:
+                ProgressView()
+            default:
+                Label("No Song Yet", systemImage: "music.note.slash")
+            }
         } description: {
             Text("to add a song use plus button")
         } actions: {
@@ -219,12 +225,20 @@ struct ContentView: View {
     }
 }
 
-enum FileImporterError: Error {
+enum FileImporterError: LocalizedError {
     case permision
+    
+    
+    var errorDescription: String? {
+        switch self {
+        case .permision:
+            "Permission error."
+        }
+    }
 }
 
 
 #Preview(traits: .previewContainer) {
-    return ContentView()
+    ContentView()
         .environment(MusicQueuePlayer.shared)
 }

@@ -7,33 +7,43 @@
 
 import SwiftData
 import AVFoundation
+import SwiftUI
 
 @Model
 class SongTrack: Identifiable {
     
     
     var id = UUID()
-    var url: URL
+    
+    @Attribute(.unique)
+    var path: String
+    
     var addedToPlaylist = false
     
-    init(url: URL) {
-        self.url = url
+    init(path: String) {
+        self.path = path
+    }
+    
+    @Transient
+    var url: URL {
+        let documentURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        return documentURL.appendingPathComponent(path)
     }
     
     func thumbnail() async throws -> Data? {
         let asset = AVURLAsset(url: url)
-        do {
-            let metaData = try await asset.load(.metadata)
-            for item in metaData {
-                guard item.commonKey == .commonKeyArtwork else {continue}
-                let data = try await item.load(.dataValue)
-                guard let data else {continue}
-                return data
-            }
-        } catch {
-            throw error
+        let metaData = try await asset.load(.metadata)
+        for item in metaData where item.commonKey == .commonKeyArtwork {
+            let data = try await item.load(.dataValue)
+            return data
         }
         
         return nil
+    }
+}
+
+extension SongTrack: Equatable {
+    static func == (lhs: SongTrack, rhs: SongTrack) -> Bool {
+        lhs.url == rhs.url
     }
 }

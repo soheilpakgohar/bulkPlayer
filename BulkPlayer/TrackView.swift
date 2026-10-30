@@ -10,84 +10,25 @@ import SwiftData
 
 struct TrackView: View {
     
-    @State private var data: Data?
+    @State private var data: Data? = nil
     @State private var isPlaying = false
     @State private var error: Error?
     @Environment(MusicQueuePlayer.self) private var playerManager
     
+    @Namespace private var titleSpace
     
     var song: SongTrack
     var playListMode = false
+    var compactMode: Bool = false
     
     var body: some View {
-        VStack(alignment: .leading) {
-            HStack {
-                if !playListMode {
-                    Image(systemName: song.addedToPlaylist ? "checkmark.circle.fill" : "circle")
-                        .symbolEffect(.bounce, value: song.addedToPlaylist)
-                        .imageScale(.large)
-                        .foregroundStyle(Color.gray)
-                }
-                if let data {
-                    Image(uiImage: UIImage(data: data)!)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 40)
-                        .padding(.vertical)
-                } else {
-                    Image(systemName: "music.quarternote.3")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 40)
-                        .padding(.vertical)
-                }
-                Text(song.url.lastPathComponent.capitalized)
-                    .bold()
-                Spacer(minLength: 0)
-                if !playListMode {
-                    Button {
-                        if isPlaying && playerManager.isPlaying {
-                            playerManager.stop()
-                            isPlaying = false
-                        } else {
-                            do {
-                                try playerManager.play(urls: [song.url])
-                            } catch {
-                                print(error.localizedDescription)
-                            }
-                            isPlaying = true
-                            NotificationCenter.default.post(name: .otherTrackIsPlaying, object: nil, userInfo: ["id": song.id])
-                        }
-                    } label: {
-                        Image(systemName: isPlaying ? "stop.fill" : "play.fill")
-                            .imageScale(.large)
-                            .symbolEffect(.rotate, options: .speed(30), value: isPlaying)
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    Button {
-                        song.addedToPlaylist = false
-                    } label: {
-                        Image(systemName: "trash")
-                            .font(.system(size: 24))
-                    }
-                    .foregroundStyle(Color.red)
-                }
+        Group {
+            if playListMode {
+                playlistModeView()
+            } else {
+                regularView()
             }
-            
         }
-        .padding(.horizontal)
-        .onTapGesture {
-            song.addedToPlaylist.toggle()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .otherTrackIsPlaying), perform: { payload in
-            if let id = payload.userInfo?["id"] as? UUID {
-                isPlaying = song.id == id
-            }
-        })
-        .alert(error: $error, actions: {
-            Button("dismiss", role: .cancel){}
-        })
         .task {
             do {
                 data = try await song.thumbnail()
@@ -95,11 +36,150 @@ struct TrackView: View {
                 self.error = error
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .otherTrackIsPlaying)) { notification in
+            if let id = notification.userInfo?["id"] as? UUID, song.id != id {
+                isPlaying = false
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .stopAll)) { _ in
+            isPlaying = false
+        }
+    }
+    
+    @ViewBuilder
+    private func artwork() -> some View {
+        if let data {
+            Image(uiImage: UIImage(data: data)!)
+                .resizable()
+                .frame(maxWidth: 54)
+                .aspectRatio(3/2, contentMode: .fit)
+                .padding(.horizontal)
+                .accessibilityHidden(true)
+        } else {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(
+                    Color.blue.gradient
+                )
+                .overlay {
+                    Image(systemName: "music.note")
+                        .font(.title2)
+                        .imageScale(.large)
+                        .foregroundStyle(.white.opacity(0.9))
+                }
+                .frame(width: 54, height:54)
+                .accessibilityHidden(true)
+        }
+    }
+    
+    @ViewBuilder
+    private func playlistModeView() -> some View {
+        HStack {
+            artwork()
+            
+            Text(song.url.lastPathComponent.capitalized)
+                .bold()
+            .lineLimit(2)
+            .animation(.easeInOut, value: compactMode)
+            .matchedGeometryEffect(id: "title", in: titleSpace)
+            
+            Spacer(minLength: 0)
+            
+            Button {
+                withAnimation {
+                    song.addedToPlaylist = false
+                }
+            } label: {
+                Image(systemName: "trash")
+                    .font(.system(size: 24))
+            }
+            .foregroundStyle(Color.red)
+            .accessibilityLabel(
+                "delete \(song.url.lastPathComponent)"
+            )
+            
+        }
+    }
+    
+    @ViewBuilder
+    private func regularView() -> some View {
+        VStack(alignment: .leading) {
+            HStack {
+                if !compactMode {
+                    Image(systemName: song.addedToPlaylist ? "checkmark.circle.fill" : "circle")
+                        .symbolEffect(.bounce, value: song.addedToPlaylist)
+                        .imageScale(.large)
+                        .foregroundStyle(Color.gray)
+                        .matchedTransitionSource(id: "selector", in: titleSpace)
+                        .onTapGesture {
+                            song.addedToPlaylist.toggle()
+                        }
+                }
+                
+                artwork()
+                
+                if !compactMode {
+                    Text(song.url.lastPathComponent.capitalized)
+                        .bold()
+                        .lineLimit(2)
+                        .padding(.trailing)
+                        .animation(.easeInOut, value: compactMode)
+                        .matchedTransitionSource(id: "title", in: titleSpace)
+                }
+                Spacer(minLength: 0)
+                Button {
+                    if isPlaying && playerManager.isPlaying {
+                        playerManager.stop()
+                        isPlaying = false
+                    } else {
+                        do {
+                            try playerManager.play(urls: [song.url])
+                        } catch {
+                            self.error = error
+                        }
+                        isPlaying = true
+                        NotificationCenter.default.post(name: .otherTrackIsPlaying, object: nil, userInfo: ["id": song.id])
+                    }
+                } label: {
+                    Image(systemName: isPlaying ? "stop.fill" : "play.fill")
+                        .imageScale(.medium)
+                        .contentTransition(.symbolEffect(.replace))
+                }
+                .buttonStyle(.glass)
+                .accessibilityLabel(
+                    isPlaying
+                    ? "Stop \(song.url.lastPathComponent)"
+                    : "Play \(song.url.lastPathComponent)"
+                )
+            }
+            
+            if compactMode {
+                HStack {
+                    Image(systemName: song.addedToPlaylist ? "checkmark.circle.fill" : "circle")
+                        .symbolEffect(.bounce, value: song.addedToPlaylist)
+                        .imageScale(.large)
+                        .foregroundStyle(Color.gray)
+                        .matchedTransitionSource(id: "selector", in: titleSpace)
+                    
+                    Text(song.url.lastPathComponent.capitalized)
+                        .bold()
+                        .lineLimit(2)
+                        .padding(.top)
+                        .animation(.easeInOut, value: compactMode)
+                        .matchedTransitionSource(id: "title", in: titleSpace)
+                }
+                .onTapGesture {
+                    song.addedToPlaylist.toggle()
+                }
+            }
+        }
+        .padding()
     }
 }
 
 #Preview {
-    TrackView(song: SongTrack(url: URL(string: "file///this-dvice/moc.mp3")!))
+    let track = SongTrack(path: "12.%20Taher%20Golgon%20-%20Ba%20To%20%5B128%5D.mp3")
+    
+    return TrackView(song: track)
         .environment(MusicQueuePlayer.shared)
         
         

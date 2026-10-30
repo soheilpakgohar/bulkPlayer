@@ -9,6 +9,7 @@ import Foundation
 
 extension Notification.Name {
     static let otherTrackIsPlaying = Notification.Name("otherTrackIsPlaying")
+    static let stopAll = Notification.Name("stopAll")
 }
 
 extension TimeInterval {
