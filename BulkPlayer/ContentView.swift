@@ -30,9 +30,8 @@ struct ContentView: View {
             .navigationTitle("songs".capitalized)
             .toolbarTitleDisplayMode(.inlineLarge)
             .toolbar {
-                if playerManager.isPlaying && playerManager.queuedItemCount > 1 {
-                    
-                    ToolbarItem {
+                ToolbarItemGroup(placement: .topBarTrailing){
+                    if playerManager.isPlaying && playerManager.queuedItemCount > 1 {
                         Button {
                             playerManager.next()
                         } label: {
@@ -40,45 +39,43 @@ struct ContentView: View {
                                 .animation(.easeInOut, value: playerManager.isPlaying)
                         }
                     }
-                }
-                if !songs.isEmpty {
-                    ToolbarItem {
-                        Menu {
-                            Button {
-                                showPlayList.toggle()
-                            } label: {
-                                Label("Play list", systemImage: "list.bullet.clipboard")
-                            }
-                            
-                            Button {
-                                withAnimation {
-                                    columns.toggle()
-                                }
-                            } label: {
-                                Label("Arrange", systemImage: columns ? "square.grid.2x2" : "rectangle.grid.1x3")
-                            }
-                        } label: {
-                            Label("Play/Stop", systemImage: playerManager.isPlaying ? "stop" : "play")
-                            
-                        } primaryAction: {
-                            menuPrimaryAction()
-                        }
-                        .badge(songs.filter {$0.addedToPlaylist}.count)
-                        
-                    }
                     
-                    ToolbarItem(placement: .topBarPinnedTrailing) {
-                        Button {
-                            fileImporterPresent.toggle()
-                        } label: {
-                            if importing {
-                                ProgressView()
-                            } else {
-                                Label("Import", systemImage: "plus")
-                            }
-                        }
-                        .buttonStyle(.borderedProminent)
+                    Button {
+                        menuPrimaryAction()
+                    } label: {
+                        Label("Play/Stop", systemImage: playerManager.isPlaying ? "stop" : "play")
                     }
+                    .badge(songs.filter {$0.addedToPlaylist}.count)
+                }
+                    
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        withAnimation {
+                            columns.toggle()
+                        }
+                    } label: {
+                        Label("Arrange", systemImage: columns ? "app.grid.2x2" : "rectangle.grid.1x3")
+                    }
+                }
+                ToolbarSpacer(placement: .bottomBar)
+                ToolbarItem(placement: .bottomBar) {
+                    Button {
+                        showPlayList.toggle()
+                    } label: {
+                        Label("Play list", systemImage: "list.bullet.clipboard")
+                    }
+                }
+                ToolbarItem(placement: .topBarPinnedTrailing) {
+                    Button {
+                        fileImporterPresent.toggle()
+                    } label: {
+                        if importing {
+                            ProgressView()
+                        } else {
+                            Label("Import", systemImage: "plus")
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
                 }
             }
         }
@@ -188,6 +185,7 @@ struct ContentView: View {
                     }
                 }
                 .animation(.default, value: songs)
+                .animation(.default, value: columns)
                 .swipeActionsContainer()
                 .padding()
                 
@@ -237,6 +235,22 @@ enum FileImporterError: LocalizedError {
     }
 }
 
+struct RealHiddenModifier: ViewModifier {
+    let condition: Bool
+    func body(content: Content) -> some View {
+        if condition {
+            content.hidden()
+        } else {
+            content
+        }
+    }
+}
+
+extension View {
+    func realHidden(condition: Bool) -> some View {
+        return self.modifier(RealHiddenModifier(condition: condition))
+    }
+}
 
 #Preview(traits: .previewContainer) {
     ContentView()
