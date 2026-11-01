@@ -14,18 +14,18 @@ import SwiftUI
 struct StopPlayIntent: LiveActivityIntent {
 
     
-    static let title: LocalizedStringResource = "Stop Player"
+    static var title: LocalizedStringResource {"Stop Bulk Player"}
     
-    static let supportedModes: IntentModes = [.foreground(.immediate)]
+    static var supportedModes: IntentModes {[.foreground, .background]}
     
     static let isDiscoverable: Bool = true
     
     @Dependency
-    private var playerManager: MusicQueuePlayer
+    private var player: MusicQueuePlayer
     
     @MainActor
     func perform() async throws -> some IntentResult {
-        playerManager.stop()
-        return .result(value: true)
+        player.stop()
+        return .result()
     }
 }

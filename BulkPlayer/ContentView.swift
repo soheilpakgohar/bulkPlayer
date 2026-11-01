@@ -26,58 +26,61 @@ struct ContentView: View {
         
         NavigationStack {
             songsView()
-            .background(scheme == .light ? Color.white.gradient : Color.black.gradient)
-            .navigationTitle("songs".capitalized)
-            .toolbarTitleDisplayMode(.inlineLarge)
-            .toolbar {
-                ToolbarItemGroup(placement: .topBarTrailing){
-                    if playerManager.isPlaying && playerManager.queuedItemCount > 1 {
+                .background(scheme == .light ? Color.white.gradient : Color(red: 0.035, green: 0.045, blue: 0.075).gradient)
+                .navigationTitle("songs".capitalized)
+                .toolbarTitleDisplayMode(.inlineLarge)
+                .toolbar {
+                    ToolbarItemGroup(placement: .topBarTrailing){
+                        if playerManager.isPlaying && playerManager.queuedItemCount > 1 {
+                            Button {
+                                playerManager.next()
+                            } label: {
+                                Label("next", systemImage: "forward.end")
+                                    .animation(.easeInOut, value: playerManager.isPlaying)
+                            }
+                        }
+                        
                         Button {
-                            playerManager.next()
+                            menuPrimaryAction()
                         } label: {
-                            Label("next", systemImage: "forward.end")
-                                .animation(.easeInOut, value: playerManager.isPlaying)
+                            Label("Play/Stop", systemImage: playerManager.isPlaying ? "stop" : "play")
+                        }
+                        .badge(songs.filter {$0.addedToPlaylist}.count)
+                        .disabled(songs.isEmpty)
+                        
+                    }
+                        
+                    ToolbarItem(placement: .bottomBar) {
+                        Button {
+                            withAnimation {
+                                columns.toggle()
+                            }
+                        } label: {
+                            Label("Arrange", systemImage: columns ? "list.dash" : "app.grid.2x2")
                         }
                     }
-                    
-                    Button {
-                        menuPrimaryAction()
-                    } label: {
-                        Label("Play/Stop", systemImage: playerManager.isPlaying ? "stop" : "play")
-                    }
-                    .badge(songs.filter {$0.addedToPlaylist}.count)
-                }
-                    
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        withAnimation {
-                            columns.toggle()
+                    ToolbarSpacer(placement: .bottomBar)
+                    ToolbarItem(placement: .bottomBar) {
+                        Button {
+                            showPlayList.toggle()
+                        } label: {
+                            Label("Play list", systemImage: "list.bullet.clipboard")
                         }
-                    } label: {
-                        Label("Arrange", systemImage: columns ? "app.grid.2x2" : "rectangle.grid.1x3")
+                        .disabled(songs.isEmpty)
                     }
-                }
-                ToolbarSpacer(placement: .bottomBar)
-                ToolbarItem(placement: .bottomBar) {
-                    Button {
-                        showPlayList.toggle()
-                    } label: {
-                        Label("Play list", systemImage: "list.bullet.clipboard")
-                    }
-                }
-                ToolbarItem(placement: .topBarPinnedTrailing) {
-                    Button {
-                        fileImporterPresent.toggle()
-                    } label: {
-                        if importing {
-                            ProgressView()
-                        } else {
-                            Label("Import", systemImage: "plus")
+                    ToolbarItem(placement: .topBarPinnedTrailing) {
+                        Button {
+                            fileImporterPresent.toggle()
+                        } label: {
+                            if importing {
+                                ProgressView()
+                            } else {
+                                Label("Import", systemImage: "plus")
+                            }
                         }
+                        .buttonStyle(.borderedProminent)
                     }
-                    .buttonStyle(.borderedProminent)
                 }
-            }
         }
         .fileImporter(isPresented: $fileImporterPresent, allowedContentTypes: [.audio], allowsMultipleSelection: true) { result in
             switch result {
@@ -238,16 +241,14 @@ enum FileImporterError: LocalizedError {
 struct RealHiddenModifier: ViewModifier {
     let condition: Bool
     func body(content: Content) -> some View {
-        if condition {
-            content.hidden()
-        } else {
+        if !condition {
             content
         }
     }
 }
 
 extension View {
-    func realHidden(condition: Bool) -> some View {
+    func hidden(condition: Bool) -> some View {
         return self.modifier(RealHiddenModifier(condition: condition))
     }
 }

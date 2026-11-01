@@ -164,6 +164,7 @@ final class MusicQueuePlayer {
     }
     
     private func addPeriodicTimeObserver() {
+        
         // Create a 0.5 second interval time.
         let interval = CMTime(value: 1, timescale: 2)
         timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
@@ -171,12 +172,7 @@ final class MusicQueuePlayer {
             Task { @MainActor in
                 // Update the published currentTime and duration values.
                 self.currentTime = time.seconds
-                if let duration = self.player.currentItem?.duration.seconds, duration.isFinite {
-                    self.duration = duration
-                }
-                if let url = (self.player.currentItem?.asset as? AVURLAsset)?.url {
-                    self.currentTitle = url.lastPathComponent
-                }
+                self.updateCurrent()
                 guard let activity = self.activity else {return}
                 let ac = ActivityContent(state: BulkPlayerLiveAttributes.ContentState(duration: self.duration, currentTime: self.currentTime, isPlaying: self.isPlaying), staleDate: nil)
             
@@ -186,11 +182,23 @@ final class MusicQueuePlayer {
         }
     }
     
+    private func updateCurrent() {
+        if let duration = self.player.currentItem?.duration.seconds, duration.isFinite {
+            self.duration = duration
+        }
+        if let url = (self.player.currentItem?.asset as? AVURLAsset)?.url {
+            self.currentTitle = url.lastPathComponent
+        }
+    }
+    
     /// Removes the time observer from the player.
     private func removePeriodicTimeObserver() {
         guard let timeObserver else { return }
         player.removeTimeObserver(timeObserver)
         self.timeObserver = nil
+        duration = 0.0
+        currentTime = 0.0
+        currentTitle = ""
         guard let activity else {return}
         endLiveActivity(activity)
     }

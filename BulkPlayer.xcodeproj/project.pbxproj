@@ -60,7 +60,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				BulkPlayerLiveAttributes.swift,
-				SongPlayerActivityView.swift,
 			);
 			target = 000000000000000100000000 /* BulkPlayer */;
 		};

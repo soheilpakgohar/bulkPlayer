@@ -11,6 +11,7 @@ import SwiftData
 struct TrackView: View {
     
     @State private var data: Data? = nil
+    @State private var duration: TimeInterval = 0.0
     @State private var isPlaying = false
     @State private var error: Error?
     @Environment(MusicQueuePlayer.self) private var playerManager
@@ -32,6 +33,7 @@ struct TrackView: View {
         .task {
             do {
                 data = try await song.thumbnail()
+                duration = try await song.duration()
             } catch {
                 self.error = error
             }
@@ -76,11 +78,18 @@ struct TrackView: View {
         HStack {
             artwork()
             
-            Text(song.url.lastPathComponent.capitalized)
-                .bold()
-            .lineLimit(2)
-            .animation(.easeInOut, value: compactMode)
-            .matchedGeometryEffect(id: "title", in: titleSpace)
+            VStack(alignment: .leading) {
+                Text(song.url.lastPathComponent.capitalized)
+                    .bold()
+                    .lineLimit(1)
+                    .animation(.easeInOut, value: compactMode)
+                    .matchedGeometryEffect(id: "title", in: titleSpace)
+                
+                Text(duration.formattedMinutesSeconds)
+                    .font(.footnote)
+                    .bold()
+                    .matchedGeometryEffect(id: "duration", in: titleSpace)
+            }
             
             Spacer(minLength: 0)
             
@@ -109,7 +118,7 @@ struct TrackView: View {
                         .symbolEffect(.bounce, value: song.addedToPlaylist)
                         .imageScale(.large)
                         .foregroundStyle(Color.gray)
-                        .matchedTransitionSource(id: "selector", in: titleSpace)
+                        .matchedGeometryEffect(id: "selector", in: titleSpace)
                         .onTapGesture {
                             song.addedToPlaylist.toggle()
                         }
@@ -118,12 +127,19 @@ struct TrackView: View {
                 artwork()
                 
                 if !compactMode {
-                    Text(song.url.lastPathComponent.capitalized)
-                        .bold()
-                        .lineLimit(2)
-                        .padding(.trailing)
-                        .animation(.easeInOut, value: compactMode)
-                        .matchedTransitionSource(id: "title", in: titleSpace)
+                    VStack(alignment: .leading) {
+                        Text(song.url.lastPathComponent.capitalized)
+                            .bold()
+                            .lineLimit(1)
+                            .padding(.trailing)
+                            .animation(.easeInOut, value: compactMode)
+                            .matchedGeometryEffect(id: "title", in: titleSpace)
+                        
+                        Text(duration.formattedMinutesSeconds)
+                            .font(.footnote)
+                            .bold()
+                            .matchedGeometryEffect(id: "duration", in: titleSpace)
+                    }
                 }
                 Spacer(minLength: 0)
                 Button {
@@ -152,25 +168,33 @@ struct TrackView: View {
                 )
             }
             
-            if compactMode {
-                HStack {
-                    Image(systemName: song.addedToPlaylist ? "checkmark.circle.fill" : "circle")
-                        .symbolEffect(.bounce, value: song.addedToPlaylist)
-                        .imageScale(.large)
-                        .foregroundStyle(Color.gray)
-                        .matchedTransitionSource(id: "selector", in: titleSpace)
-                    
+            
+            HStack {
+                Image(systemName: song.addedToPlaylist ? "checkmark.circle.fill" : "circle")
+                    .symbolEffect(.bounce, value: song.addedToPlaylist)
+                    .imageScale(.large)
+                    .foregroundStyle(Color.gray)
+                    .matchedGeometryEffect(id: "selector", in: titleSpace)
+                
+                VStack(alignment: .leading) {
                     Text(song.url.lastPathComponent.capitalized)
                         .bold()
-                        .lineLimit(2)
+                        .lineLimit(1)
                         .padding(.top)
                         .animation(.easeInOut, value: compactMode)
-                        .matchedTransitionSource(id: "title", in: titleSpace)
-                }
-                .onTapGesture {
-                    song.addedToPlaylist.toggle()
+                        .matchedGeometryEffect(id: "title", in: titleSpace)
+                    
+                    Text(duration.formattedMinutesSeconds)
+                        .font(.callout)
+                        .bold()
+                        .matchedGeometryEffect(id: "duration", in: titleSpace)
                 }
             }
+            .hidden(condition: !compactMode)
+            .onTapGesture {
+                song.addedToPlaylist.toggle()
+            }
+            
         }
         .padding()
     }
@@ -179,7 +203,7 @@ struct TrackView: View {
 #Preview {
     let track = SongTrack(path: "12.%20Taher%20Golgon%20-%20Ba%20To%20%5B128%5D.mp3")
     
-    return TrackView(song: track)
+    return TrackView(song: track, compactMode: true)
         .environment(MusicQueuePlayer.shared)
         
         

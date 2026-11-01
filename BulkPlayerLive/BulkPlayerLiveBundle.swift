@@ -11,7 +11,7 @@ import SwiftUI
 @main
 struct BulkPlayerLiveBundle: WidgetBundle {
     var body: some Widget {
-        BulkPlayerLive()
+//        BulkPlayerLive()
         BulkPlayerLiveLiveActivity()
     }
 }

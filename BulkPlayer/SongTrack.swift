@@ -30,6 +30,11 @@ class SongTrack: Identifiable {
         return documentURL.appendingPathComponent(path)
     }
     
+    func duration() async throws -> TimeInterval {
+        let asset = AVURLAsset(url: url)
+        return try await asset.load(.duration).seconds
+    }
+    
     func thumbnail() async throws -> Data? {
         let asset = AVURLAsset(url: url)
         let metaData = try await asset.load(.metadata)
