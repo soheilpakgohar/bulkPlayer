@@ -53,7 +53,7 @@ struct TrackView: View {
         if let data {
             Image(uiImage: UIImage(data: data)!)
                 .resizable()
-                .frame(maxWidth: 54)
+                .frame(maxWidth: 54, maxHeight: 54)
                 .aspectRatio(3/2, contentMode: .fit)
                 .padding(.horizontal)
                 .accessibilityHidden(true)
@@ -84,6 +84,9 @@ struct TrackView: View {
                     .lineLimit(1)
                     .animation(.easeInOut, value: compactMode)
                     .matchedGeometryEffect(id: "title", in: titleSpace)
+                    .contextMenu {
+                        Text(song.url.lastPathComponent.capitalized)
+                    }
                 
                 Text(duration.formattedMinutesSeconds)
                     .font(.footnote)
@@ -113,34 +116,40 @@ struct TrackView: View {
     private func regularView() -> some View {
         VStack(alignment: .leading) {
             HStack {
-                if !compactMode {
-                    Image(systemName: song.addedToPlaylist ? "checkmark.circle.fill" : "circle")
-                        .symbolEffect(.bounce, value: song.addedToPlaylist)
-                        .imageScale(.large)
-                        .foregroundStyle(Color.gray)
-                        .matchedGeometryEffect(id: "selector", in: titleSpace)
-                        .onTapGesture {
-                            song.addedToPlaylist.toggle()
-                        }
-                }
+                
+                Image(systemName: song.addedToPlaylist ? "checkmark.circle.fill" : "circle")
+                    .symbolEffect(.bounce, value: song.addedToPlaylist)
+                    .imageScale(.large)
+                    .foregroundStyle(Color.gray)
+                    .hidden(condition: compactMode)
+                    .matchedGeometryEffect(id: "selector", in: titleSpace)
+                    .onTapGesture {
+                        song.addedToPlaylist.toggle()
+                    }
+                    
+                
                 
                 artwork()
                 
-                if !compactMode {
-                    VStack(alignment: .leading) {
-                        Text(song.url.lastPathComponent.capitalized)
-                            .bold()
-                            .lineLimit(1)
-                            .padding(.trailing)
-                            .animation(.easeInOut, value: compactMode)
-                            .matchedGeometryEffect(id: "title", in: titleSpace)
-                        
-                        Text(duration.formattedMinutesSeconds)
-                            .font(.footnote)
-                            .bold()
-                            .matchedGeometryEffect(id: "duration", in: titleSpace)
-                    }
+                
+                VStack(alignment: .leading) {
+                    Text(song.url.lastPathComponent.capitalized)
+                        .bold()
+                        .lineLimit(1)
+                        .padding(.trailing)
+                        .animation(.easeInOut, value: compactMode)
+                        .matchedGeometryEffect(id: "title", in: titleSpace)
+                        .contextMenu {
+                            Text(song.url.lastPathComponent.capitalized)
+                        }
+                    
+                    Text(duration.formattedMinutesSeconds)
+                        .font(.footnote)
+                        .bold()
+                        .matchedGeometryEffect(id: "duration", in: titleSpace)
                 }
+                .hidden(condition: compactMode)
+                
                 Spacer(minLength: 0)
                 Button {
                     if isPlaying && playerManager.isPlaying {
@@ -183,6 +192,9 @@ struct TrackView: View {
                         .padding(.top)
                         .animation(.easeInOut, value: compactMode)
                         .matchedGeometryEffect(id: "title", in: titleSpace)
+                        .contextMenu {
+                            Text(song.url.lastPathComponent.capitalized)
+                        }
                     
                     Text(duration.formattedMinutesSeconds)
                         .font(.callout)
