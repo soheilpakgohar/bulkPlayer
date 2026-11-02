@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MusicProgressSlider: View {
-    let currentTime: TimeInterval
+    var currentTime: TimeInterval
     let duration: TimeInterval
     let onSeek: (TimeInterval) async -> Void
 
@@ -45,13 +45,19 @@ struct MusicProgressSlider: View {
 
             HStack {
                 Text(formatTime(sliderValue))
-
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                Spacer()
+                
+                seekingButtons()
+                
                 Spacer()
 
                 Text("−\(formatTime(max(0, duration - sliderValue)))")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
             }
-            .font(.caption.monospacedDigit())
-            .foregroundStyle(.secondary)
+            
         }
         .onAppear {
             sliderValue = clamped(currentTime)
@@ -63,6 +69,28 @@ struct MusicProgressSlider: View {
         .onChange(of: duration) {
             sliderValue = clamped(sliderValue)
         }
+    }
+    
+    private func seekingButtons() -> some View {
+        HStack(spacing: 35) {
+            Button {
+                sliderValue -= 10
+                handleEditingChanged(false)
+            } label: {
+                Image(systemName: "10.arrow.trianglehead.counterclockwise")
+                    .imageScale(.large)
+                    .bold()
+            }
+            Button {
+                sliderValue += 30
+                handleEditingChanged(false)
+            } label: {
+                Image(systemName: "30.arrow.trianglehead.clockwise")
+                    .imageScale(.large)
+                    .bold()
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Seeking

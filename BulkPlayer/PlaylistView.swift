@@ -24,6 +24,16 @@ struct PlaylistView: View {
                 List {
                     ForEach(songs) { song in
                         TrackView(song: song, playListMode: true)
+                            .swipeActions(allowsFullSwipe: true){
+                                Button {
+                                    withAnimation {
+                                        song.addedToPlaylist = false
+                                    }
+                                } label: {
+                                    Label("delete", systemImage: "trash")
+                                }
+                                .tint(.red)
+                            }
                     }
                 }
                 .listStyle(.inset)

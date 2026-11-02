@@ -161,13 +161,14 @@ struct ContentView: View {
         VStack {
             if playerManager.isPlaying {
                 VStack(alignment: .leading) {
+                    Text(playerManager.currentTitle)
+                        .font(.footnote)
+                        .lineLimit(1)
+                        .padding(.horizontal)
                     HStack {
                         MusicProgressSlider(currentTime: playerManager.currentTime, duration: playerManager.duration, onSeek: playerManager.goTo(_:))
                     }
                     .padding(.horizontal)
-                    Text(playerManager.currentTitle)
-                        .font(.footnote)
-                        .padding(.leading)
                 }
             }
             ScrollView {

@@ -96,18 +96,18 @@ struct TrackView: View {
             
             Spacer(minLength: 0)
             
-            Button {
-                withAnimation {
-                    song.addedToPlaylist = false
-                }
-            } label: {
-                Image(systemName: "trash")
-                    .font(.system(size: 24))
-            }
-            .foregroundStyle(Color.red)
-            .accessibilityLabel(
-                "delete \(song.url.lastPathComponent)"
-            )
+//            Button {
+//                withAnimation {
+//                    song.addedToPlaylist = false
+//                }
+//            } label: {
+//                Image(systemName: "trash")
+//                    .font(.system(size: 24))
+//            }
+//            .foregroundStyle(Color.red)
+//            .accessibilityLabel(
+//                "delete \(song.url.lastPathComponent)"
+//            )
             
         }
     }
