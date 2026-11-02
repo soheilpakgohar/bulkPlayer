@@ -162,7 +162,8 @@ struct ContentView: View {
             if playerManager.isPlaying {
                 VStack(alignment: .leading) {
                     Text(playerManager.currentTitle)
-                        .font(.footnote)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .padding(.horizontal)
                     HStack {
@@ -170,6 +171,9 @@ struct ContentView: View {
                     }
                     .padding(.horizontal)
                 }
+                .padding(.vertical)
+                .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+                .padding(.horizontal)
             }
             ScrollView {
                 LazyVGrid(columns: items, spacing: 20) {
