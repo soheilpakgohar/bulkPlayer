@@ -34,6 +34,8 @@ final class MusicQueuePlayer {
     
     private var activity: Activity<BulkPlayerLiveAttributes>? = nil
     
+    private var items = [AVPlayerItem]()
+    
     @ObservationIgnored
     private var timeObserver: Any?
 
@@ -53,12 +55,14 @@ final class MusicQueuePlayer {
 
         player.pause()
         player.removeAllItems()
-
+        items.removeAll()
+        
         for url in urls {
             let item = AVPlayerItem(url: url)
+            items.append(item)
             player.insert(item, after: nil)
         }
-
+        
         player.play()
         withAnimation {
             isPlaying = true
@@ -98,7 +102,11 @@ final class MusicQueuePlayer {
 
     /// Skip the current track.
     func next() {
-        player.advanceToNextItem()
+        if let currentItem = player.currentItem, items.firstIndex(of: currentItem) == (items.count - 1) {
+            stop()
+        } else {
+            player.advanceToNextItem()
+        }
     }
 
     func stop() {
@@ -107,6 +115,7 @@ final class MusicQueuePlayer {
         }
         player.pause()
         player.removeAllItems()
+        items.removeAll()
     }
 
     // MARK: - State
@@ -122,10 +131,6 @@ final class MusicQueuePlayer {
     }
 
     var currentTitle: String = ""
-
-    var queuedItemCount: Int {
-        player.items().count
-    }
 
     var currentTime: TimeInterval = 0.0
     

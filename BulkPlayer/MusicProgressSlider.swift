@@ -15,6 +15,8 @@ struct MusicProgressSlider: View {
     @State private var sliderValue: Double = 0
     @State private var isEditing = false
     @State private var isSeeking = false
+    
+    @Environment(MusicQueuePlayer.self) private var playerManager
 
     private var hasValidDuration: Bool {
         duration.isFinite && duration > 0
@@ -78,18 +80,23 @@ struct MusicProgressSlider: View {
                 handleEditingChanged(false)
             } label: {
                 Image(systemName: "10.arrow.trianglehead.counterclockwise")
-                    .imageScale(.large)
-                    .bold()
             }
+            
+            Button {
+                playerManager.next()
+            } label: {
+                Image(systemName: "forward.end")
+            }
+            
             Button {
                 sliderValue += 30
                 handleEditingChanged(false)
             } label: {
                 Image(systemName: "30.arrow.trianglehead.clockwise")
-                    .imageScale(.large)
-                    .bold()
             }
         }
+        .imageScale(.large)
+        .bold()
         .buttonStyle(.plain)
     }
 
@@ -146,4 +153,5 @@ struct MusicProgressSlider: View {
     MusicProgressSlider(currentTime: 2.0, duration: 2.5) { interval in
         
     }
+    .environment(MusicQueuePlayer.shared)
 }

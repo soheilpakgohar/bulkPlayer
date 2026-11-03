@@ -30,7 +30,7 @@ struct PlaylistView: View {
                                         song.addedToPlaylist = false
                                     }
                                 } label: {
-                                    Label("delete", systemImage: "trash")
+                                    Label("Remove", systemImage: "document.on.trash")
                                 }
                                 .tint(.red)
                             }

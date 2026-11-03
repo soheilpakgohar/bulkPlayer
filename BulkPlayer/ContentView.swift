@@ -12,7 +12,6 @@ struct ContentView: View {
     @State private var importing = false
     @Environment(MusicQueuePlayer.self) private var playerManager
     
-    
     @Query var songs: [SongTrack]
     
     @Environment(\.modelContext) private var context
@@ -30,18 +29,10 @@ struct ContentView: View {
                 .navigationTitle("songs".capitalized)
                 .toolbarTitleDisplayMode(.inlineLarge)
                 .toolbar {
-                    ToolbarItemGroup(placement: .topBarTrailing){
-                        if playerManager.isPlaying && playerManager.queuedItemCount > 1 {
-                            Button {
-                                playerManager.next()
-                            } label: {
-                                Label("next", systemImage: "forward.end")
-                                    .animation(.easeInOut, value: playerManager.isPlaying)
-                            }
-                        }
+                    ToolbarItem(placement: .topBarTrailing){
                         
                         Button {
-                            menuPrimaryAction()
+                            playPause()
                         } label: {
                             Label("Play/Stop", systemImage: playerManager.isPlaying ? "stop" : "play")
                         }
@@ -82,20 +73,7 @@ struct ContentView: View {
                     }
                 }
         }
-        .fileImporter(isPresented: $fileImporterPresent, allowedContentTypes: [.audio], allowsMultipleSelection: true) { result in
-            switch result {
-            case .success(let urls):
-                Task {
-                    do {
-                        try await handleFile(urls: urls)
-                    } catch {
-                        self.error = error
-                    }
-                }
-            case .failure(let error):
-                self.error = error
-            }
-        }
+        .fileImporter(isPresented: $fileImporterPresent, allowedContentTypes: [.audio], allowsMultipleSelection: true, onCompletion: importManager(_:))
         .alert(error: $error) {}
         .sheet(isPresented: $showPlayList) {
             PlaylistView(songs: songs.filter {$0.addedToPlaylist})
@@ -105,6 +83,21 @@ struct ContentView: View {
     }
     
     // Mark: file handler
+    private func importManager(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            Task {
+                do {
+                    try await handleFile(urls: urls)
+                } catch {
+                    self.error = error
+                }
+            }
+        case .failure(let error):
+            self.error = error
+        }
+    }
+    
     private func handleFile(urls: [URL]) async throws {
         importing = true
         for url in urls {
@@ -140,7 +133,7 @@ struct ContentView: View {
         }
     }
     
-    private func menuPrimaryAction() {
+    private func playPause() {
         do {
             if playerManager.isPlaying {
                 playerManager.stop()
@@ -149,11 +142,11 @@ struct ContentView: View {
                 if (songs.filter {$0.addedToPlaylist}).isEmpty {
                     try playerManager.play(urls: songs.map {$0.url})
                 } else {
-                     try playerManager.play(urls: songs.filter({$0.addedToPlaylist}).map({$0.url}))
+                    try playerManager.play(urls: songs.filter({$0.addedToPlaylist}).map({$0.url}))
                 }
             }
         } catch {
-            print(error.localizedDescription)
+            self.error = error
         }
     }
     
@@ -174,7 +167,9 @@ struct ContentView: View {
                 .padding(.vertical)
                 .glassEffect(in: RoundedRectangle(cornerRadius: 12))
                 .padding(.horizontal)
+                .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .opacity))
             }
+
             ScrollView {
                 LazyVGrid(columns: items, spacing: 20) {
                     ForEach(songs, id: \.self) { song in
@@ -192,7 +187,6 @@ struct ContentView: View {
                             }
                     }
                 }
-                .animation(.default, value: songs)
                 .animation(.default, value: columns)
                 .swipeActionsContainer()
                 .padding()
