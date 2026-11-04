@@ -167,7 +167,7 @@ struct ContentView: View {
                 .padding(.vertical)
                 .glassEffect(in: RoundedRectangle(cornerRadius: 12))
                 .padding(.horizontal)
-                .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .opacity))
+                .transition(.push(from: .trailing))
             }
 
             ScrollView {
