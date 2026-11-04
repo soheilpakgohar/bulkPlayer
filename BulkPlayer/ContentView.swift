@@ -25,41 +25,12 @@ struct ContentView: View {
         
         NavigationStack {
             songsView()
-                .background(scheme == .light ? Color.white.gradient : Color(red: 0.035, green: 0.045, blue: 0.075).gradient)
+                .background(scheme == .light ? LinearGradient(colors: [.white, .gray.opacity(0.3), .white], startPoint: .topLeading, endPoint: .bottomTrailing) : LinearGradient(colors: [Color(red: 0.035, green: 0.045, blue: 0.075), .white.opacity(0.1), Color(red: 0.035, green: 0.045, blue: 0.075)], startPoint: .topLeading, endPoint: .bottomTrailing))
                 .navigationTitle("songs".capitalized)
                 .toolbarTitleDisplayMode(.inlineLarge)
                 .toolbar {
-                    ToolbarItem(placement: .topBarTrailing){
-                        
-                        Button {
-                            playPause()
-                        } label: {
-                            Label("Play/Stop", systemImage: playerManager.isPlaying ? "stop" : "play")
-                        }
-                        .badge(songs.filter {$0.addedToPlaylist}.count)
-                        .disabled(songs.isEmpty)
-                        
-                    }
-                        
-                    ToolbarItem(placement: .bottomBar) {
-                        Button {
-                            withAnimation {
-                                columns.toggle()
-                            }
-                        } label: {
-                            Label("Arrange", systemImage: columns ? "list.dash" : "app.grid.2x2")
-                        }
-                    }
-                    ToolbarSpacer(placement: .bottomBar)
-                    ToolbarItem(placement: .bottomBar) {
-                        Button {
-                            showPlayList.toggle()
-                        } label: {
-                            Label("Play list", systemImage: "list.bullet.clipboard")
-                        }
-                        .disabled(songs.isEmpty)
-                    }
-                    ToolbarItem(placement: .topBarPinnedTrailing) {
+                    
+                    ToolbarItem(placement: .topBarTrailing) {
                         Button {
                             fileImporterPresent.toggle()
                         } label: {
@@ -69,7 +40,34 @@ struct ContentView: View {
                                 Label("Import", systemImage: "plus")
                             }
                         }
-                        .buttonStyle(.borderedProminent)
+                    }
+                    
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button {
+                            playPause()
+                        } label: {
+                            Label("Play/Stop", systemImage: playerManager.isPlaying ? "stop" : "play")
+                        }
+                        .badge(songs.filter {$0.addedToPlaylist}.count)
+                        .hidden(condition: songs.isEmpty)
+                    }
+                        
+                    ToolbarItemGroup(placement: .bottomBar) {
+                        Button {
+                            withAnimation {
+                                columns.toggle()
+                            }
+                        } label: {
+                            Label("Arrange", systemImage: columns ? "list.dash" : "app.grid.2x2")
+                        }
+                        .hidden(condition: songs.isEmpty)
+                        Spacer()
+                        Button {
+                            showPlayList.toggle()
+                        } label: {
+                            Label("Play list", systemImage: "list.bullet.clipboard")
+                        }
+                        .hidden(condition: songs.isEmpty)
                     }
                 }
         }
@@ -207,20 +205,19 @@ struct ContentView: View {
                 ProgressView()
             default:
                 Label("No Song Yet", systemImage: "music.note.slash")
+                    .symbolRenderingMode(.hierarchical)
             }
         } description: {
-            Text("to add a song use plus button")
+            Text("to add some tap plus button")
         } actions: {
             Button {
                 fileImporterPresent.toggle()
             } label: {
-                Label("add new".capitalized, systemImage: "plus")
+                Label("add new".capitalized, systemImage: "plus.circle.fill")
                     .symbolRenderingMode(.hierarchical)
                     .font(.headline)
                     .imageScale(.large)
             }
-            .buttonStyle(.borderedProminent)
-            
         }
     }
 }
@@ -253,6 +250,11 @@ extension View {
 }
 
 #Preview(traits: .previewContainer) {
+    ContentView()
+        .environment(MusicQueuePlayer.shared)
+}
+
+#Preview {
     ContentView()
         .environment(MusicQueuePlayer.shared)
 }
