@@ -54,13 +54,14 @@ struct TrackView: View {
             Image(uiImage: UIImage(data: data)!)
                 .resizable()
                 .frame(maxWidth: 54, maxHeight: 54)
+                .clipShape(.rect(cornerRadius: 12))
                 .aspectRatio(3/2, contentMode: .fit)
                 .padding(.horizontal)
                 .accessibilityHidden(true)
         } else {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(
-                    Color.blue.gradient
+                    Color.secondary.mix(with: .white, by: 0.3)
                 )
                 .overlay {
                     Image(systemName: "music.note")
@@ -95,20 +96,6 @@ struct TrackView: View {
             }
             
             Spacer(minLength: 0)
-            
-//            Button {
-//                withAnimation {
-//                    song.addedToPlaylist = false
-//                }
-//            } label: {
-//                Image(systemName: "trash")
-//                    .font(.system(size: 24))
-//            }
-//            .foregroundStyle(Color.red)
-//            .accessibilityLabel(
-//                "delete \(song.url.lastPathComponent)"
-//            )
-            
         }
     }
     

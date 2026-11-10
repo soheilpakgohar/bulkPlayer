@@ -76,7 +76,9 @@ struct MusicProgressSlider: View {
     private func seekingButtons() -> some View {
         HStack(spacing: 35) {
             Button {
-                sliderValue -= 10
+                withAnimation {
+                    sliderValue -= 10
+                }
                 handleEditingChanged(false)
             } label: {
                 Image(systemName: "10.arrow.trianglehead.counterclockwise")
@@ -89,14 +91,15 @@ struct MusicProgressSlider: View {
             }
             
             Button {
-                sliderValue += 30
+                withAnimation {
+                    sliderValue += 30
+                }
                 handleEditingChanged(false)
             } label: {
                 Image(systemName: "30.arrow.trianglehead.clockwise")
             }
         }
         .imageScale(.large)
-        .bold()
         .buttonStyle(.plain)
     }
 

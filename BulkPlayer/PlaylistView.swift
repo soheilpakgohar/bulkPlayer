@@ -24,6 +24,7 @@ struct PlaylistView: View {
                 List {
                     ForEach(songs) { song in
                         TrackView(song: song, playListMode: true)
+                            .listRowSeparator(.hidden)
                             .swipeActions(allowsFullSwipe: true){
                                 Button {
                                     withAnimation {

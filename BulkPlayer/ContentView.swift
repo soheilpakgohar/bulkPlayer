@@ -46,9 +46,10 @@ struct ContentView: View {
                         Button {
                             playPause()
                         } label: {
-                            Label("Play/Stop", systemImage: playerManager.isPlaying ? "stop" : "play")
+                            Label("Play/Stop", systemImage: playerManager.isPlaying ? "stop.fill" : "play.fill")
                         }
                         .badge(songs.filter {$0.addedToPlaylist}.count)
+                        .tint(Color.blue.mix(with: .black, by: 0.2))
                         .hidden(condition: songs.isEmpty)
                     }
                         
@@ -60,6 +61,7 @@ struct ContentView: View {
                         } label: {
                             Label("Arrange", systemImage: columns ? "list.dash" : "app.grid.2x2")
                         }
+                        .tint(Color.blue.mix(with: .black, by: 0.2))
                         .hidden(condition: songs.isEmpty)
                         Spacer()
                         Button {
@@ -172,7 +174,7 @@ struct ContentView: View {
                 LazyVGrid(columns: items, spacing: 20) {
                     ForEach(songs, id: \.self) { song in
                         TrackView(song: song, compactMode: columns)
-                            .background(scheme == .light ? LinearGradient(colors: [.white, .gray.opacity(0.2)], startPoint: .top, endPoint: .bottomTrailing) : LinearGradient(colors: [.gray.opacity(0.2), .black.opacity(0.5)], startPoint: .topLeading, endPoint: .bottomTrailing) ,in: RoundedRectangle(cornerRadius: 12))
+                            .background(scheme == .light ? Color.gray.tertiary : Color.purple.mix(with: .black, by: 0.3).tertiary, in: .rect(cornerRadius: 20))
                             .environment(playerManager)
                             .swipeActions {
                                 Button(role: .destructive) {
@@ -254,7 +256,7 @@ extension View {
         .environment(MusicQueuePlayer.shared)
 }
 
-#Preview {
+#Preview("Empty list") {
     ContentView()
         .environment(MusicQueuePlayer.shared)
 }
