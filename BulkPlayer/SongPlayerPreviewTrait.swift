@@ -14,9 +14,11 @@ struct SongPlayerPreviewTrait: PreviewModifier {
         let container = try ModelContainer(for: SongTrack.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let song1 = SongTrack(path:  "12.%20Taher%20Golgon%20-%20Ba%20To%20%5B128%5D.mp3")
         song1.addedToPlaylist = true
-        let song2 = SongTrack(path:  "13.%20Taher%20Golgon%20-%20Ba%20To%20%5B128%5D.mp3")
+        for index in 1...15 {
+            let song2 = SongTrack(path:  "13\(index).%20Taher%20Golgon%20-%20Ba%20To%20%5B128%5D.mp3")
+            container.mainContext.insert(song2)
+        }
         container.mainContext.insert(song1)
-        container.mainContext.insert(song2)
         return container
     }
     

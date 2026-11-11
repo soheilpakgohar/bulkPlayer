@@ -8,17 +8,18 @@
 import SwiftUI
 import SwiftData
 
-struct PlaylistView: View {
+struct PlaylistView: View  {
     
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     
     var songs: [SongTrack]
+    var title: String = "Play List"
     
     var body: some View {
         NavigationStack {
             if songs.isEmpty  {
-                ContentUnavailableView("No Songs Yet", systemImage: "list.bullet.clipboard.fill")
+                ContentUnavailableView("No Favorits Yet", systemImage: "list.bullet.clipboard.fill")
                     .symbolRenderingMode(.hierarchical)
             } else {
                 List {
@@ -38,17 +39,8 @@ struct PlaylistView: View {
                     }
                 }
                 .listStyle(.inset)
-                .navigationTitle("Play List")
+                .navigationTitle(title)
                 .toolbarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button(role: .close) {
-                            dismiss()
-                        } label: {
-                            Image(systemName: "xmark")
-                        }
-                    }
-                }
             }
         }
     }
@@ -56,7 +48,5 @@ struct PlaylistView: View {
 
 #Preview {
     let song = SongTrack(path: "this-dvice/moc.mp3")
-    return PlaylistView(songs: [song])
-        .environment(MusicQueuePlayer.shared)
-    
+    PlaylistView(songs: [song])
 }

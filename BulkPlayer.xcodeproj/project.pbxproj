@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CBCC348F30A33F3100D859AE /* Algorithms in Frameworks */ = {isa = PBXBuildFile; productRef = CBCC348E30A33F3100D859AE /* Algorithms */; };
+		CBCC349130A341FE00D859AE /* Algorithms in Frameworks */ = {isa = PBXBuildFile; productRef = CBCC349030A341FE00D859AE /* Algorithms */; };
 		CBCF804A3085F7140026847B /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CBCF80493085F7140026847B /* WidgetKit.framework */; };
 		CBCF804C3085F7140026847B /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CBCF804B3085F7140026847B /* SwiftUI.framework */; };
 		CBCF805B3085F7160026847B /* BulkPlayerLiveExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CBCF80473085F7140026847B /* BulkPlayerLiveExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -98,11 +100,13 @@
 		000000000000000130000000 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				CBCC348F30A33F3100D859AE /* Algorithms in Frameworks */,
 			);
 		};
 		CBCF80443085F7140026847B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				CBCC349130A341FE00D859AE /* Algorithms in Frameworks */,
 				CBCF804C3085F7140026847B /* SwiftUI.framework in Frameworks */,
 				CBCF804A3085F7140026847B /* WidgetKit.framework in Frameworks */,
 			);
@@ -159,6 +163,9 @@
 				000000000000000000000010 /* BulkPlayer */,
 			);
 			name = BulkPlayer;
+			packageProductDependencies = (
+				CBCC348E30A33F3100D859AE /* Algorithms */,
+			);
 			productName = MyApp;
 			productReference = 000000000000000000000120 /* BulkPlayer.app */;
 			productType = "com.apple.product-type.application";
@@ -177,6 +184,9 @@
 				CBCF804D3085F7140026847B /* BulkPlayerLive */,
 			);
 			name = BulkPlayerLiveExtension;
+			packageProductDependencies = (
+				CBCC349030A341FE00D859AE /* Algorithms */,
+			);
 			productName = BulkPlayerLiveExtension;
 			productReference = CBCF80473085F7140026847B /* BulkPlayerLiveExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -208,6 +218,9 @@
 			);
 			mainGroup = 000000000000000000000001;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				CBCC348D30A33F3100D859AE /* XCRemoteSwiftPackageReference "swift-algorithms" */,
+			);
 			preferredProjectObjectVersion = 90;
 			productRefGroup = 000000000000000000000020 /* Products */;
 			projectDirPath = "";
@@ -571,6 +584,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		CBCC348D30A33F3100D859AE /* XCRemoteSwiftPackageReference "swift-algorithms" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-algorithms.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.2.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CBCC348E30A33F3100D859AE /* Algorithms */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CBCC348D30A33F3100D859AE /* XCRemoteSwiftPackageReference "swift-algorithms" */;
+			productName = Algorithms;
+		};
+		CBCC349030A341FE00D859AE /* Algorithms */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CBCC348D30A33F3100D859AE /* XCRemoteSwiftPackageReference "swift-algorithms" */;
+			productName = Algorithms;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 000000000000000000000000 /* Project object */;
 }

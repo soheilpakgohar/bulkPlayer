@@ -9,6 +9,7 @@ import AVFoundation
 import Foundation
 import ActivityKit
 import SwiftUI
+import Algorithms
 
 enum MusicQueueError: LocalizedError {
     case emptyQueue

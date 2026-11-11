@@ -1,22 +1,28 @@
 import SwiftUI
 import AVFoundation
 import SwiftData
-import Playgrounds
 
 struct ContentView: View {
     
     @AppStorage("columns") private var columns = false
     @State private var fileImporterPresent = false
-    @State private var showPlayList = false
+    @State private var showPlayList = false {
+        didSet {
+            withAnimation {
+                sheetType = .playList
+            }
+        }
+    }
     @State private var error: Error?
     @State private var importing = false
+    @State private var sheetType: SheetType? = nil
     @Environment(MusicQueuePlayer.self) private var playerManager
     
     @Query var songs: [SongTrack]
     
     @Environment(\.modelContext) private var context
     @Environment(\.colorScheme) private var scheme
-    
+    @Environment(\.dismiss) private var dismiss
     var items: [GridItem] {
         Array(repeating: GridItem(.flexible(), spacing: 12, alignment: .leading), count: columns ? 2 : 1)
     }
@@ -75,10 +81,27 @@ struct ContentView: View {
         }
         .fileImporter(isPresented: $fileImporterPresent, allowedContentTypes: [.audio], allowsMultipleSelection: true, onCompletion: importManager(_:))
         .alert(error: $error) {}
-        .sheet(isPresented: $showPlayList) {
-            PlaylistView(songs: songs.filter {$0.addedToPlaylist})
+        .sheet(item: $sheetType) { type in
+            switch type {
+            case .playList:
+                PlaylistView(songs: songs.filter {$0.addedToPlaylist})
                 .presentationDetents([.medium, .large])
+            case .player:
+                PlayerView(songs: songs.filter {$0.addedToPlaylist})
+                    .presentationDetents([.height(150), .large])
+                    .interactiveDismissDisabled()
+                    .presentationBackgroundInteraction(.enabled(upThrough: .height(150)))
+            }
         }
+        .onChange(of: playerManager.isPlaying, { _, isPlaying in
+            withAnimation {
+                if isPlaying {
+                    sheetType = .player
+                } else {
+                    sheetType = .none
+                }
+            }
+        })
         .environment(playerManager)
     }
     
@@ -152,24 +175,6 @@ struct ContentView: View {
     
     private func songsView() -> some View {
         VStack {
-            if playerManager.isPlaying {
-                VStack(alignment: .leading) {
-                    Text(playerManager.currentTitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .padding(.horizontal)
-                    HStack {
-                        MusicProgressSlider(currentTime: playerManager.currentTime, duration: playerManager.duration, onSeek: playerManager.goTo(_:))
-                    }
-                    .padding(.horizontal)
-                }
-                .padding(.vertical)
-                .glassEffect(in: RoundedRectangle(cornerRadius: 12))
-                .padding(.horizontal)
-                .transition(.push(from: .trailing))
-            }
-
             ScrollView {
                 LazyVGrid(columns: items, spacing: 20) {
                     ForEach(songs, id: \.self) { song in
@@ -192,6 +197,7 @@ struct ContentView: View {
                 .padding()
                 
             }
+            Spacer(minLength: sheetType == .player ? 100 : 0)
         }
         .overlay {
             if songs.isEmpty {
@@ -245,6 +251,14 @@ struct RealHiddenModifier: ViewModifier {
     }
 }
 
+enum SheetType: String, Identifiable {
+    case playList, player
+    
+    var id: String {
+        self.rawValue
+    }
+}
+
 extension View {
     func hidden(condition: Bool) -> some View {
         return self.modifier(RealHiddenModifier(condition: condition))
@@ -252,11 +266,6 @@ extension View {
 }
 
 #Preview(traits: .previewContainer) {
-    ContentView()
-        .environment(MusicQueuePlayer.shared)
-}
-
-#Preview("Empty list") {
     ContentView()
         .environment(MusicQueuePlayer.shared)
 }

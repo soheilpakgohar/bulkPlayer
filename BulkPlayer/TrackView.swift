@@ -80,15 +80,18 @@ struct TrackView: View {
             artwork()
             
             VStack(alignment: .leading) {
+                
                 Text(song.url.lastPathComponent.capitalized)
                     .bold()
                     .lineLimit(1)
                     .animation(.easeInOut, value: compactMode)
                     .matchedGeometryEffect(id: "title", in: titleSpace)
                     .contextMenu {
-                        Text(song.url.lastPathComponent.capitalized)
+                        Button {} label: {
+                            Text(song.url.lastPathComponent)
+                        }
                     }
-                
+            
                 Text(duration.formattedMinutesSeconds)
                     .font(.footnote)
                     .bold()
@@ -104,10 +107,10 @@ struct TrackView: View {
         VStack(alignment: .leading) {
             HStack {
                 
-                Image(systemName: song.addedToPlaylist ? "checkmark.circle.fill" : "circle")
+                Image(systemName: song.addedToPlaylist ? "heart.fill" : "heart")
                     .symbolEffect(.bounce, value: song.addedToPlaylist)
                     .imageScale(.large)
-                    .foregroundStyle(Color.gray)
+                    .foregroundStyle(Color.red.secondary)
                     .hidden(condition: compactMode)
                     .matchedGeometryEffect(id: "selector", in: titleSpace)
                     .onTapGesture {
@@ -127,9 +130,11 @@ struct TrackView: View {
                         .animation(.easeInOut, value: compactMode)
                         .matchedGeometryEffect(id: "title", in: titleSpace)
                         .contextMenu {
-                            Text(song.url.lastPathComponent.capitalized)
+                            Button {} label: {
+                                Text(song.url.lastPathComponent)
+                            }
                         }
-                    
+                   
                     Text(duration.formattedMinutesSeconds)
                         .font(.footnote)
                         .bold()
@@ -166,10 +171,10 @@ struct TrackView: View {
             
             
             HStack {
-                Image(systemName: song.addedToPlaylist ? "checkmark.circle.fill" : "circle")
+                Image(systemName: song.addedToPlaylist ? "heart.fill" : "heart")
                     .symbolEffect(.bounce, value: song.addedToPlaylist)
                     .imageScale(.large)
-                    .foregroundStyle(Color.gray)
+                    .foregroundStyle(Color.red.secondary)
                     .matchedGeometryEffect(id: "selector", in: titleSpace)
                 
                 VStack(alignment: .leading) {
@@ -202,7 +207,7 @@ struct TrackView: View {
 #Preview {
     let track = SongTrack(path: "12.%20Taher%20Golgon%20-%20Ba%20To%20%5B128%5D.mp3")
     
-    return TrackView(song: track, compactMode: true)
+    return TrackView(song: track, compactMode: false)
         .environment(MusicQueuePlayer.shared)
         
         
