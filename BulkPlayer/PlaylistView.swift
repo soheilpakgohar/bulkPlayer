@@ -10,49 +10,51 @@ import SwiftData
 
 struct PlaylistView: View  {
     
-    @Environment(\.modelContext) private var context
-    @Environment(\.dismiss) private var dismiss
-    
-    
     @Query(
         FetchDescriptor(
             predicate: #Predicate<SongTrack>{ $0.addedToPlaylist }
         )
     ) private var songs: [SongTrack]
     
-    var title: String = "Favorits"
-    
     var body: some View {
         NavigationStack {
-            if songs.isEmpty  {
-                ContentUnavailableView("No Favorits Yet", systemImage: "list.bullet.clipboard.fill")
-                    .symbolRenderingMode(.hierarchical)
-            } else {
-                List {
-                    ForEach(songs) { song in
-                        TrackView(song: song, playListMode: true)
-                            .listRowSeparator(.hidden)
-                            .swipeActions(allowsFullSwipe: true){
-                                Button {
-                                    withAnimation {
-                                        song.addedToPlaylist = false
-                                    }
-                                } label: {
-                                    Label("Remove", systemImage: "document.on.trash")
-                                }
-                                .tint(.red)
-                            }
+            List(songs) { song in
+                TrackView(song: song, playListMode: true)
+                    .listRowSeparator(.hidden)
+                    .swipeActions(allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            song.addedToPlaylist = false
+                        } label: {
+                            Label("Remove", systemImage: "document.on.trash")
+                        }
                     }
+            }
+            .listStyle(.plain)
+            .animation(.default, value: songs)
+            .overlay {
+                if songs.isEmpty {
+                    ContentUnavailableView("No Favorits Yet", systemImage: "list.bullet.clipboard.fill")
+                        .symbolRenderingMode(.hierarchical)
                 }
-                .animation(.default, value: songs)
-                .navigationTitle(title)
-                .toolbarTitleDisplayMode(.inlineLarge)
+            }
+            .navigationTitle("Favorits")
+            .navigationSubtitle("only this play list will play".capitalized)
+            .toolbarTitleDisplayMode(.inlineLarge)
+            .toolbar {
+                Image(systemName: "waveform.mid")
+                    .badge(songs.count)
             }
         }
     }
 }
 
 #Preview(traits: .previewContainer) {
+    PlaylistView()
+        .environment(MusicQueuePlayer.shared)
+}
+
+
+#Preview("Empty List") {
     PlaylistView()
         .environment(MusicQueuePlayer.shared)
 }

@@ -87,7 +87,8 @@ struct MusicProgressSlider: View {
             Button {
                 playerManager.next()
             } label: {
-                Image(systemName: "forward.end")
+                Image(systemName: "forward.end.fill")
+                    .imageScale(.large)
             }
             
             Button {
@@ -99,7 +100,6 @@ struct MusicProgressSlider: View {
                 Image(systemName: "30.arrow.trianglehead.clockwise")
             }
         }
-        .imageScale(.large)
         .buttonStyle(.plain)
     }
 

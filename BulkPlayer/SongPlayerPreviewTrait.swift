@@ -16,6 +16,7 @@ struct SongPlayerPreviewTrait: PreviewModifier {
         song1.addedToPlaylist = true
         for index in 1...15 {
             let song2 = SongTrack(path:  "13\(index).%20Taher%20Golgon%20-%20Ba%20To%20%5B128%5D.mp3")
+            song2.addedToPlaylist = [true,false].randomElement()!
             container.mainContext.insert(song2)
         }
         container.mainContext.insert(song1)
