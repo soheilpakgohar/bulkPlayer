@@ -70,6 +70,7 @@
 			membershipExceptions = (
 				Extentions.swift,
 				MusicQueuePlayer.swift,
+				RealHiddenModifier.swift,
 			);
 			target = CBCF80463085F7140026847B /* BulkPlayerLiveExtension */;
 		};

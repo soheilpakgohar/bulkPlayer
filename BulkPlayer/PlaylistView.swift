@@ -13,8 +13,14 @@ struct PlaylistView: View  {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     
-    var songs: [SongTrack]
-    var title: String = "Play List"
+    
+    @Query(
+        FetchDescriptor(
+            predicate: #Predicate<SongTrack>{ $0.addedToPlaylist }
+        )
+    ) private var songs: [SongTrack]
+    
+    var title: String = "Favorits"
     
     var body: some View {
         NavigationStack {
@@ -38,15 +44,15 @@ struct PlaylistView: View  {
                             }
                     }
                 }
-                .listStyle(.inset)
+                .animation(.default, value: songs)
                 .navigationTitle(title)
-                .toolbarTitleDisplayMode(.inline)
+                .toolbarTitleDisplayMode(.inlineLarge)
             }
         }
     }
 }
 
-#Preview {
-    let song = SongTrack(path: "this-dvice/moc.mp3")
-    PlaylistView(songs: [song])
+#Preview(traits: .previewContainer) {
+    PlaylistView()
+        .environment(MusicQueuePlayer.shared)
 }

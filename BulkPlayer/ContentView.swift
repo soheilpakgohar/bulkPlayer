@@ -6,16 +6,8 @@ struct ContentView: View {
     
     @AppStorage("columns") private var columns = false
     @State private var fileImporterPresent = false
-    @State private var showPlayList = false {
-        didSet {
-            withAnimation {
-                sheetType = .playList
-            }
-        }
-    }
     @State private var error: Error?
     @State private var importing = false
-    @State private var sheetType: SheetType? = nil
     @Environment(MusicQueuePlayer.self) private var playerManager
     
     @Query var songs: [SongTrack]
@@ -31,7 +23,7 @@ struct ContentView: View {
         
         NavigationStack {
             songsView()
-                .background(scheme == .light ? LinearGradient(colors: [.white, .gray.opacity(0.3), .white], startPoint: .topLeading, endPoint: .bottomTrailing) : LinearGradient(colors: [Color(red: 0.035, green: 0.045, blue: 0.075), .white.opacity(0.1), Color(red: 0.035, green: 0.045, blue: 0.075)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .background(scheme == .light ? Color.gray.gradient.tertiary : Color.purple.mix(with: .black, by: 0.7).gradient.tertiary)
                 .navigationTitle("songs".capitalized)
                 .toolbarTitleDisplayMode(.inlineLarge)
                 .toolbar {
@@ -69,39 +61,13 @@ struct ContentView: View {
                         }
                         .tint(Color.blue.mix(with: .black, by: 0.2))
                         .hidden(condition: songs.isEmpty)
-                        Spacer()
-                        Button {
-                            showPlayList.toggle()
-                        } label: {
-                            Label("Play list", systemImage: "list.bullet.clipboard")
-                        }
-                        .hidden(condition: songs.isEmpty)
+                        
+                        Spacer(minLength: 0)
                     }
                 }
         }
         .fileImporter(isPresented: $fileImporterPresent, allowedContentTypes: [.audio], allowsMultipleSelection: true, onCompletion: importManager(_:))
         .alert(error: $error) {}
-        .sheet(item: $sheetType) { type in
-            switch type {
-            case .playList:
-                PlaylistView(songs: songs.filter {$0.addedToPlaylist})
-                .presentationDetents([.medium, .large])
-            case .player:
-                PlayerView(songs: songs.filter {$0.addedToPlaylist})
-                    .presentationDetents([.height(150), .large])
-                    .interactiveDismissDisabled()
-                    .presentationBackgroundInteraction(.enabled(upThrough: .height(150)))
-            }
-        }
-        .onChange(of: playerManager.isPlaying, { _, isPlaying in
-            withAnimation {
-                if isPlaying {
-                    sheetType = .player
-                } else {
-                    sheetType = .none
-                }
-            }
-        })
         .environment(playerManager)
     }
     
@@ -175,7 +141,12 @@ struct ContentView: View {
     
     private func songsView() -> some View {
         VStack {
-            ScrollView {
+            if playerManager.isPlaying {
+                PlayerView()
+                    .padding(.horizontal)
+                    .transition(.push(from: .trailing))
+            }
+            ScrollView(showsIndicators: false) {
                 LazyVGrid(columns: items, spacing: 20) {
                     ForEach(songs, id: \.self) { song in
                         TrackView(song: song, compactMode: columns)
@@ -197,9 +168,8 @@ struct ContentView: View {
                 .padding()
                 
             }
-            Spacer(minLength: sheetType == .player ? 100 : 0)
         }
-        .overlay {
+        .overlay(alignment: .bottom) {
             if songs.isEmpty {
                 emptySongsView(isLoading: importing)
             }
@@ -242,26 +212,11 @@ enum FileImporterError: LocalizedError {
     }
 }
 
-struct RealHiddenModifier: ViewModifier {
-    let condition: Bool
-    func body(content: Content) -> some View {
-        if !condition {
-            content
-        }
-    }
-}
-
 enum SheetType: String, Identifiable {
     case playList, player
     
     var id: String {
         self.rawValue
-    }
-}
-
-extension View {
-    func hidden(condition: Bool) -> some View {
-        return self.modifier(RealHiddenModifier(condition: condition))
     }
 }
 

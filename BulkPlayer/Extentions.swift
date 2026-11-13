@@ -5,7 +5,7 @@
 //  Created by soheil pakgohar on 10/19/26.
 //
 
-import Foundation
+import SwiftUI
 
 extension Notification.Name {
     static let otherTrackIsPlaying = Notification.Name("otherTrackIsPlaying")
@@ -23,5 +23,11 @@ extension TimeInterval {
     var minutesSeconds: (minutes: Int, seconds: Int) {
         let totalSeconds = Int(self)
         return (totalSeconds / 60, totalSeconds % 60)
+    }
+}
+
+extension View {
+    func hidden(condition: Bool) -> some View {
+        return self.modifier(RealHiddenModifier(condition: condition))
     }
 }

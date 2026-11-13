@@ -15,7 +15,7 @@ import AppIntents
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            HomeView()
                 .environment(playerManager)
                 .modelContainer(for: SongTrack.self)
         }
