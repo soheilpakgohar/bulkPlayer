@@ -37,6 +37,10 @@ final class MusicQueuePlayer {
     
     private var items = [AVPlayerItem]()
     
+    var queue: Int {
+        items.count
+    }
+    
     @ObservationIgnored
     private var timeObserver: Any?
 

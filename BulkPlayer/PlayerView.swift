@@ -27,7 +27,8 @@ struct PlayerView: View {
                     .padding(.top, 8)
             }
             
-            MusicProgressSlider(currentTime: playerManager.currentTime, duration: playerManager.duration, onSeek: playerManager.goTo(_:))
+            MusicProgressSlider()
+                .environment(playerManager)
 
         }
         .padding()

@@ -8,9 +8,6 @@
 import SwiftUI
 
 struct MusicProgressSlider: View {
-    var currentTime: TimeInterval
-    let duration: TimeInterval
-    let onSeek: (TimeInterval) async -> Void
 
     @State private var sliderValue: Double = 0
     @State private var isEditing = false
@@ -19,56 +16,53 @@ struct MusicProgressSlider: View {
     @Environment(MusicQueuePlayer.self) private var playerManager
 
     private var hasValidDuration: Bool {
-        duration.isFinite && duration > 0
+        playerManager.duration.isFinite && playerManager.duration > 0
     }
 
     private var sliderRange: ClosedRange<Double> {
-        0...max(hasValidDuration ? duration : 1, 1)
+        0...max(hasValidDuration ? playerManager.duration : 1, 1)
     }
 
     var body: some View {
         VStack(spacing: 2) {
-            Slider(
-                value: $sliderValue,
-                in: sliderRange,
-                label: {
-                    Text("Playback position")
-                },
-                onEditingChanged: handleEditingChanged
-            )
-            .tint(.primary)
-            .sliderThumbVisibility(
-                isEditing ? .visible : .hidden
-            )
-            .disabled(!hasValidDuration || isSeeking)
-            .accessibilityValue(
-                "\(formatTime(sliderValue)) of \(formatTime(duration))"
-            )
-
             HStack {
-                Text(formatTime(sliderValue))
+                Text(sliderValue.formattedMinutesSeconds)
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
-                Spacer()
+                Slider(
+                    value: $sliderValue,
+                    in: sliderRange,
+                    label: {
+                        Text("Playback position")
+                    },
+                    onEditingChanged: handleEditingChanged
+                )
+                .tint(.primary)
+                .sliderThumbVisibility(
+                    isEditing ? .visible : .hidden
+                )
+                .disabled(!hasValidDuration || isSeeking)
+                .accessibilityValue(
+                    "\(sliderValue.formattedMinutesSeconds) of \(playerManager.duration.formattedMinutesSeconds)"
+                )
                 
-                seekingButtons()
-                
-                Spacer()
-
-                Text("−\(formatTime(max(0, duration - sliderValue)))")
+                Text("−\((max(0, playerManager.duration - sliderValue)).formattedMinutesSeconds)")
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
+                
+            seekingButtons()
+
             
         }
         .onAppear {
-            sliderValue = clamped(currentTime)
+            sliderValue = clamped(playerManager.currentTime)
         }
-        .onChange(of: currentTime) { _, newTime in
+        .onChange(of: playerManager.currentTime) { _, newTime in
             guard !isEditing, !isSeeking else { return }
             sliderValue = clamped(newTime)
         }
-        .onChange(of: duration) {
+        .onChange(of: playerManager.duration) {
             sliderValue = clamped(sliderValue)
         }
     }
@@ -87,7 +81,7 @@ struct MusicProgressSlider: View {
             Button {
                 playerManager.next()
             } label: {
-                Image(systemName: "forward.end.fill")
+                Image(systemName: playerManager.queue > 1 ? "forward.end.fill" : "stop.fill")
                     .imageScale(.large)
             }
             
@@ -108,7 +102,7 @@ struct MusicProgressSlider: View {
     private func handleEditingChanged(_ editing: Bool) {
         if editing {
             isEditing = true
-            sliderValue = clamped(currentTime)
+            sliderValue = clamped(playerManager.currentTime)
             return
         }
 
@@ -116,7 +110,7 @@ struct MusicProgressSlider: View {
         isSeeking = true
 
         Task { @MainActor in
-            await onSeek(target)
+            playerManager.goTo(target)
 
             // Keep the chosen position until playback updates again.
             sliderValue = target
@@ -129,32 +123,11 @@ struct MusicProgressSlider: View {
         guard hasValidDuration else { return 0 }
 
         let validTime = time.isFinite ? time : 0
-        return min(max(validTime, 0), duration)
-    }
-
-    private func formatTime(_ time: TimeInterval) -> String {
-        let seconds = Int(max(0, time.isFinite ? time : 0))
-        let hours = seconds / 3600
-        let minutes = (seconds % 3600) / 60
-        let remainder = seconds % 60
-
-        if hours > 0 {
-            return String(
-                format: "%d:%02d:%02d",
-                hours, minutes, remainder
-            )
-        }
-
-        return String(
-            format: "%d:%02d",
-            minutes, remainder
-        )
+        return min(max(validTime, 0), playerManager.duration)
     }
 }
 
 #Preview {
-    MusicProgressSlider(currentTime: 2.0, duration: 2.5) { interval in
-        
-    }
+    MusicProgressSlider()
     .environment(MusicQueuePlayer.shared)
 }

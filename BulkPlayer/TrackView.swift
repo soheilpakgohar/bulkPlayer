@@ -123,6 +123,7 @@ struct TrackView: View {
                 
                 
                 VStack(alignment: .leading) {
+                  
                     Text(song.url.lastPathComponent.capitalized)
                         .bold()
                         .lineLimit(1)
@@ -178,6 +179,7 @@ struct TrackView: View {
                     .matchedGeometryEffect(id: "selector", in: titleSpace)
                 
                 VStack(alignment: .leading) {
+                    
                     Text(song.url.lastPathComponent.capitalized)
                         .bold()
                         .lineLimit(1)
